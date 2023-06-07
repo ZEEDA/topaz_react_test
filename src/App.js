@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, { useEffect, useState } from "react";
 import {
   Typography,
   makeStyles,
@@ -8,27 +8,23 @@ import {
   Button,
   Box,
   Divider,
-  TextField
- } from '@material-ui/core';
-import './App.css';
-import {
-  listener,
-  startTablet
-} from "./SigWebTablet";
-
+  TextField,
+  Paper,
+} from "@material-ui/core";
+import "./App.css";
+import { listener, startTablet } from "./SigWebTablet";
 
 const useStyles = makeStyles((theme) => ({
   root: {},
   card: {
     boxShadow: theme.shadows[5],
-    outline: 'none'
+    outline: "none",
   },
   textField: {
     border: 1,
-    background: 'grey',
-    width: 500
-  }
-
+    background: "grey",
+    width: 500,
+  },
 }));
 
 /* sdk
@@ -43,75 +39,69 @@ function App() {
   const classes = useStyles();
   const [sigCaptured, setSigCaptured] = useState(null);
 
-  listener()
+  listener();
 
-  const handleSig = () => {
-
-  }
+  const handleSig = () => {};
 
   const handleSigCapture = (sig) => {
     let image = new Image();
-    image.src = 'data:image/png;base64,' + sig;
-    setSigCaptured({image, sig})
-  }
-
-
+    image.src = "data:image/png;base64," + sig;
+    setSigCaptured({ image, sig });
+  };
 
   return (
     <div className="App">
       <header className="App-header">
-        <Card
+        <Paper
+          style={{ width: "100%" }}
           className={classes.card}
-          align='center'
+          align="center"
         >
-          <CardHeader title='Capture Signature' />
-          <Divider/>
-          <CardContent>
-            <Box p={5}>
-              <canvas id="cnv" name="cnv" width="500" height="100" />
+          <h2>Add Signature test</h2>
+          <Divider />
+          <Box p={5}>
+            <canvas id="cnv" name="cnv" width="500" height="100" />
+          </Box>
+          <form action="#" name="FORM1">
+            {!sigCaptured ? (
+              <Button
+                variant="contained"
+                onClick={() => {
+                  startTablet(handleSigCapture);
+                }}
+              >
+                Sign
+              </Button>
+            ) : (
+              <Button
+                onClick={() => {
+                  handleSig();
+                }}
+              >
+                Done
+              </Button>
+            )}
+            <Typography variant="body1" style={{margin: 16}}>
+              Please have customer sign signature pad.
+            </Typography>
+            <Box p={2}>
+              <Typography>Image:</Typography>
+              <img src={sigCaptured?.image.src} />
             </Box>
-            <form action="#" name="FORM1">
-              {!sigCaptured?
-                <Button 
-                  onClick={() => {
-                    startTablet(handleSigCapture);
-                  }}
-                >
-                  Sign
-                </Button>
-                : 
-                <Button 
-                  onClick={() => {
-                    handleSig();
-                  }}
-                >
-                  Done
-                </Button>
-              }
-              <Typography variant='body1'>
-                Please have customer sign signature pad.
-              </Typography>
+            <div className="results">
               <Box p={2}>
-                <Typography>
-                  SigString:
-                </Typography>
-                <TextField className={classes.textField} name="sigString" rows='20'  multiline/>
+                <Typography>ImgData:</Typography>
+                <TextField
+                  className={classes.textField}
+                  name="imgData"
+                  rows="20"
+                  multiline
+                  value={sigCaptured?.image.src}
+                />
               </Box>
-              <Box p={2}>
-                <Typography>
-                  ImgData:
-                </Typography>
-                <TextField className={classes.textField} name='imgData' rows='20'  multiline value={sigCaptured?.image.src}/>
-              </Box>
-              <Box p={2}>
-                <Typography>
-                  Image:
-                </Typography>
-                <img src={sigCaptured?.image.src}/>
-              </Box>
-            </form>
-          </CardContent>
-        </Card>
+            </div>
+          </form>
+        </Paper>
       </header>
     </div>
   );

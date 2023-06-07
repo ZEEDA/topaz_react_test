@@ -12,7 +12,10 @@
     animation: App-logo-spin infinite 20s linear;
   }
 }
-
+#cnv{
+  border: 1px dashed #999;
+  border-radius: 4px;
+}
 .App-header {
   background-color: #282c34;
   min-height: 100vh;
@@ -35,4 +38,10 @@
   to {
     transform: rotate(360deg);
   }
+}
+form .results{
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
 }
