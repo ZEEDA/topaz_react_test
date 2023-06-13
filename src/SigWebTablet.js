@@ -1,873 +1,503 @@
-//SigWebTablet JavaScript File for SigWeb
-//
-//Version - 1.0.3.0
-//
-//Last updated by Topaz Systems Inc. - 4/20/2020
-//
-var tmr;
-var eventTmr;
+	var tmr;
 
-var resetIsSupported = false;
-let lcdSize, lcdX, lcdY, scrn, ctx;
+	export 	function onSign()
+	{
+		var ctx = document.getElementById('cnv').getContext('2d');         
+		SetDisplayXSize( 500 );
+		SetDisplayYSize( 100 );
+		SetTabletState(0, tmr);
+		SetJustifyMode(0);
+		ClearTablet();
+		if(tmr == null)
+		{
+			tmr = SetTabletState(1, ctx, 50);
+		}
+		else
+		{
+			SetTabletState(0, tmr);
+			tmr = null;
+			tmr = SetTabletState(1, ctx, 50);
+		}
+	}
 
+	export function onClear()
+	{
+		ClearTablet();
+	}
 
-export function startTablet(setSigCaptured)
-{
-  try
-  {
-    SetTabletState(1);
-    let retmod = TabletModelNumber();
-    SetTabletState(0);
-    if(retmod == 11 || retmod == 12 || retmod == 15)
-    {
-      ctx = document.getElementById('cnv').getContext('2d');
-      eventTmr = setInterval( SigWebEvent, 20 );
-      console.log(eventTmr)
-      tmr = SetTabletState(1, ctx, 50) || tmr;
-      SetLCDCaptureMode(2);
-      document.FORM1.sigString.value = "";
-      LcdRefresh(0, 0, 0, 240, 64);
-      SetJustifyMode(0);
-      KeyPadClearHotSpotList();
-      ClearSigWindow(1);
-      SetDisplayXSize(500);
-      SetDisplayYSize(100);
-      SetImageXSize(500);
-      SetImageYSize(100);
-      SetLCDCaptureMode(2);
+	export function onDone(SigImageCallback)
+	{
+		debugger
+		if(NumberOfTabletPoints() == 0)
+		{
+			alert("Please sign before continuing");
+		}
+		else
+		{
+			SetTabletState(0, tmr);
+			//RETURN TOPAZ-FORMAT SIGSTRING
+			SetSigCompressionMode(1);
+			// document.FORM1.bioSigData.value=GetSigString();
+			// document.FORM1.sigStringData.value += GetSigString();
+			//this returns the signature in Topaz's own format, with biometric information
 
-			/*
-			LCDSendGraphicUrl(1, 2, 0, 20, "http://www.sigplusweb.com/SigWeb/Sign.bmp");
-			LCDSendGraphicUrl(1, 2, 207, 4, "http://www.sigplusweb.com/SigWeb/OK.bmp");
-			LCDSendGraphicUrl(1, 2, 15, 4, "http://www.sigplusweb.com/SigWeb/CLEAR.bmp");
-			*/
-			LcdWriteLocalImage(1, 2, 0, 20, "/images/Sign.bmp");
-			LcdWriteLocalImage(1, 2, 207, 4, "/images/OK.bmp");
-			LcdWriteLocalImage(1, 2, 15, 4, "/images/CLEAR.bmp");
-
-      lcdSize = LCDGetLCDSize();
-      lcdX = lcdSize & 0xffff;
-      lcdY = (lcdSize >> 16) & 0xffff;
-
-      const data = "These are sample terms and conditions. Please press Continue.";
-
-      parse(data);
-
-      LCDWriteString(0, 2, 15, 45, "9pt Arial", 15, "Continue");
-
-      KeyPadAddHotSpot(0, 1, 12, 40, 40, 15);   //Continue
-
-      ClearTablet();
-
-      LCDSetWindow(0, 0, 1, 1);
-      SetSigWindow(1, 0, 0, 1, 1);  
-      SetLCDCaptureMode(2);
-
-			scrn = 1;
-			
-      onSigPenUp = () =>
-      {
-        processPenUp(setSigCaptured);
-      };
-
-      SetLCDCaptureMode(2);
-    }
-    else
-    {
-      alert("You do not have the appropriate signature pad plugged in to use this demo.");
-    }
-  }
-  catch (e)
-  {
-    alert("Unable to communicate with SigWeb. Please confirm that SigWeb is installed and running on this PC.");
-  }
-
-}
-
-
-
-function processPenUp(setSigCaptured)
-{
-  if(KeyPadQueryHotSpot(0) > 0)
-  {
-    ClearSigWindow(1);
-    LcdRefresh(1, 16, 45, 50, 15);
-
-    if(scrn == 1)
-    {
-      ClearTablet();
-      LcdRefresh(0, 0, 0, 240, 64);
-
-      const data2 = "We'll bind the signature to all the displayed text. Please press Continue.";
-
-      parse(data2);
-
-      LCDWriteString(0, 2, 15, 45, "9pt Arial", 15, "Continue");
-      LCDWriteString(0, 2, 200, 45, "9pt Arial", 15, "Back");
-
-      KeyPadAddHotSpot(1, 1, 195, 40, 20, 15);  //Back
-
-      scrn = 2;
-    }
-    else if(scrn == 2)
-    {
-      LcdRefresh(2, 0, 0, 240, 64);
-      ClearTablet();
-      KeyPadClearHotSpotList();
-      KeyPadAddHotSpot(2, 1, 10, 5, 53, 17);   //CLEAR
-      KeyPadAddHotSpot(3, 1, 197, 5, 19, 17);  //OK
-      LCDSetWindow(2, 22, 236, 40);
-      SetSigWindow(1, 0, 22, 240, 40);
-    }
-
-    SetLCDCaptureMode(2);
-  }
-
-  if(KeyPadQueryHotSpot(1) > 0)
-  {
-    ClearSigWindow(1);
-    LcdRefresh(1, 200, 45, 25, 15);
-
-    if(scrn == 2)
-    {
-      KeyPadClearHotSpotList();
-      LcdRefresh(1, 200, 45, 25, 15);
-      ClearTablet();
-      LcdRefresh(0, 0, 0, 240, 64);
-
-      const data = "These are sample terms and conditions. Please press Continue.";
-
-      parse(data);
-
-      LCDWriteString(0, 2, 15, 45, "9pt Arial", 15, "Continue");
-
-      KeyPadAddHotSpot(0, 1, 12, 40, 40, 15);   //Continue
-
-      scrn = 1;
-    }
-
-    SetLCDCaptureMode(2);
-  }
-
-  if(KeyPadQueryHotSpot(2) > 0)
-  {
-    ClearSigWindow(1);
-    LcdRefresh(1, 10, 0, 53, 17);
-
-    LcdRefresh(2, 0, 0, 240, 64);
-    ClearTablet();
-  }
-
-  if(KeyPadQueryHotSpot(3) > 0)
-  {
-    ClearSigWindow(1);
-    LcdRefresh(1, 210, 3, 14, 14);
-
-    if(NumberOfTabletPoints() > 0)
-    {
-      LcdRefresh(0, 0, 0, 240, 64);
-      LCDWriteString(0, 2, 35, 25, "9pt Arial", 15, "Signature capture complete.");
-
-      //NOW, EXTRACT THE SIGNATURE IN THE TOPAZ BIOMETRIC FORMAT -- SIGSTRING
-      //OR AS A BASE64-ENCODED PNG IMAGE
-      //OR BOTH
-
-      //********************USE THIS SECTION IF YOU WISH TO APPLY AUTOKEY TO YOUR TOPAZ SIGNATURE
-      //READ ABOUT AUTOKEY AND THE TOPAZ SIGNATURE FORMAT HERE: http://topazsystems.com/links/robustsignatures.pdf
-      //AUTOKEY IS CRITICAL TO SAVING AN eSIGN-COMPLIANT SIGNATURE
-      //AUTOKEY ONLY APPLIES TO THE TOPAZ-FORMAT SIGSTRING AND DOES NOT APPLY TO AN IMAGE OF THE SIGNATURE
-      //AUTOKEY ALLOWS THE DEVELOPER TO CRYPTOGRAPHICALLY BIND THE TOPAZ SIGNATURE TO A SET OF DATA
-      //THE PURPOSE OF THIS IS TO SHOW THAT THE SIGNATURE IS BEING APPLIED TO THE DATA YOU PASS IN USING AutoKeyAddData()
-      //IN GENERAL TOPAZ RECOMMENDS REPLICATING A TRADITIONAL 'PAPER AND PEN' APPROACH
-      //IN OTHER WORDS, IF YOU WERE TO PRINT OUT ON PAPER THE TERMS/INFORMATION THE SIGNER IS SUPPOSED TO READ AND AGREE WITH
-      //THE DATA ON THIS PAPER IS WHAT SHOULD IN WHOLE BE PASSED INTO AUTOKEYADDANSIDATA() DIGITALLY
-      //THE TOPAZ SIGSTRING IS THEN BOUND TO THIS DATA, AND CAN ONLY BE SUCCESSFULLY DECRYPTED LATER USING THIS DATA
-      //AUTOKEYADDDATA IS DEPRECATED AND REPLACED BY AUTOKEYADDANSIDATA
-      var CryptoData = "";
-      CryptoData = "This represents sample data the signer reads and is agreeing to when signing.";
-      CryptoData = CryptoData + "Concatenate all this data into a single variable.";
-      AutoKeyAddANSIData(CryptoData); //PASS THE DATA IN TO BE USED FOR AUTOKEY
-      SetEncryptionMode(2);
-      //*******END AUTOKEY SECTION
-
-      //NOTE THAT THE AUTOKEY SECTION ABOVE IS NOT REQUIRED TO RETURN A TOPAZ SIGSTRING
-      //BUT IT IS STRONGLY RECOMMENDED IF YOU REQUIRE eSIGN COMPLIANCE
-      //RETURN THE TOPAZ-FORMAT SIGSTRING
-      SetSigCompressionMode(1);
-      //alert("KEYSTRING:" + GetKeyString());
-
-      document.FORM1.sigString.value += GetSigString();
-      clearInterval(eventTmr);
-			//setTimeout(endDemo, 2000);
-			//TO RETURN A BASE64-ENCODED PNG IMAGE OF THE SIGNATURE
+			//RETURN BMP BYTE ARRAY CONVERTED TO BASE64 STRING
 			SetImageXSize(500);
 			SetImageYSize(100);
 			SetImagePenWidth(5);
-			GetSigImageB64(setSigCaptured); //PASS IN THE FUNCTION NAME SIGWEB WILL USE TO RETURN THE FINAL IMAGE
-    }
-    else
-    {
-      LcdRefresh(0, 0, 0, 240, 64);
-			//LCDSendGraphicUrl(0, 2, 4, 20, "http://www.sigplusweb.com/SigWeb/please.bmp");
-      LCDWriteString(0, 2, 4, 20, "9pt Arial", 15, "Please Complete Signature");
-      ClearTablet();
-      LcdRefresh(2, 0, 0, 240, 64);
-      SetLCDCaptureMode(2);
-    }
-  }
-  
-  ClearSigWindow(1);
-}
-
-function parse(textData)
-{
-  var words = textData.split(" ");
-  var writeData = "";
-  var tempData = "";
-  var xSize = 0;
-  var ySize = 0;
-  var i = 0;
-  var yPos = 0;
-
-  for(i=0; i < words.length; i++)
-  {
-    tempData += words[i];
-
-    xSize = LCDStringWidth("9pt Arial", tempData);
-
-    if (xSize < lcdX)
-    {
-      writeData = tempData;
-      tempData += " ";
-
-      xSize = LCDStringWidth("9pt Arial", tempData);
-
-      if (xSize < lcdX)
-      {
-        writeData = tempData;
-      }
-    }
-    else
-    {
-      ySize = LCDStringHeight("9pt Arial", tempData);
-
-      LCDWriteString(0, 2, 0, yPos, "9pt Arial", 15, writeData);
-
-      tempData = "";
-      writeData = "";
-      yPos += ySize;
-      i--;
-    }
-  }
-
-  if(writeData != "")
-  {
-    LCDWriteString(0, 2, 0, yPos, "9pt Arial", 15, writeData);
-  }
-}
-
-function endDemo()
-{
-  LcdRefresh(0, 0, 0, 240, 64);
-  LCDSetWindow(0, 0, 240, 64);
-  SetSigWindow(1, 0, 0, 240, 64);
-  KeyPadClearHotSpotList();
-  SetLCDCaptureMode(1);
-  SetTabletState(0, tmr);
-  ClearTablet();
-}
-
-function close(){
-  if(resetIsSupported){
-    Reset();
-  } else{
-    endDemo();
-  }
-}
-
-//function processPenUp()
-//{
-//ClearSigWindow(1);
-//}
-
-export const listener = () => {
-
-  console.log('listen')
-  window.onload = () => {
-
-    if(IsSigWebInstalled()){
-      console.log('installed')
-      resetIsSupported = GetResetSupported();
-      if(!resetIsSupported){
-        var sigweb_link = document.createElement("a");
-        sigweb_link.href = "https://www.topazsystems.com/software/sigweb.exe";
-        sigweb_link.innerHTML = "https://www.topazsystems.com/software/sigweb.exe";
-
-        var note = document.getElementById("sigWebVrsnNote");
-        note.innerHTML = "There is a newer version of SigWeb available here: ";
-        note.appendChild(sigweb_link);
-      }
-    }
-    else{
-      alert("Unable to communicate with SigWeb. Please confirm that SigWeb is installed and running on this PC.");
-    }
-  };
-
-  window.onbeforeunload = function(evt){
-    close();
-    clearInterval(tmr);
-    evt.preventDefault(); //For Firefox, needed for browser closure
-  };
-}
+			GetSigImageB64(SigImageCallback);
+		}
+	}
 
 
-function GetResetSupported(){
-  var minSigWebVersionResetSupport = "1.6.4.0";
+	/************************************************************************************************************************************************************************************ */
+	var getBlobURL = (window.URL && URL.createObjectURL.bind(URL)) || (window.webkitURL && window.webkitURL.createObjectURL.bind(window.webkitURL)) || window.createObjectURL;
+	var revokeBlobURL = (window.URL && URL.revokeObjectURL.bind(URL)) || (window.webkitURL && window.webkitURL.revokeObjectURL.bind(window.webkitURL)) || window.revokeObjectURL;
 
-  if(isOlderSigWebVersionInstalled(minSigWebVersionResetSupport)){
-    console.log("Old SigWeb version installed.");
-    return false;
-  }
-  return true;
-}
+	var baseUri = makeUri();
+	var	ctx;
 
-function isOlderSigWebVersionInstalled(cmprVer){
-  var sigWebVer = GetSigWebVersion();
-  if(sigWebVer != ""){
-    return isOlderVersion(cmprVer, sigWebVer);
-  } else{
-    return false;
-  }
-}
+	function isIE() {
+		return ((navigator.appName == 'Microsoft Internet Explorer') || ((navigator.appName == 'Netscape') && (new RegExp("Trident/.*rv:([0-9]{1,}[\.0-9]{0,})").exec
 
-function isOlderVersion (oldVer, newVer) {
-  const oldParts = oldVer.split('.')
-  const newParts = newVer.split('.')
-  for (var i = 0; i < newParts.length; i++) {
-    const a = parseInt(newParts[i]) || 0
-    const b = parseInt(oldParts[i]) || 0
-    if (a < b) return true
-    if (a > b) return false
-  }
-	return false;
-}
+(navigator.userAgent) != null)));
+	}
 
-/************************************************************************************************************************************************************************************ */
-var getBlobURL = (window.URL && URL.createObjectURL.bind(URL)) || (window.webkitURL && window.webkitURL.createObjectURL.bind(window.webkitURL)) || window.createObjectURL;
-var revokeBlobURL = (window.URL && URL.revokeObjectURL.bind(URL)) || (window.webkitURL && window.webkitURL.revokeObjectURL.bind(window.webkitURL)) || window.revokeObjectURL;
+	function isChrome() {
+		var ua = navigator.userAgent;
+		var chrome = false;
 
-var baseUri = makeUri();
-//var	ctx;
+		//Javascript Browser Detection - Chrome
+		if (ua.lastIndexOf('Chrome/') > 0) {
+			//var version = ua.substr(ua.lastIndexOf('Chrome/') + 7, 2);
+			return true;
+		}
+		else {
+			return false;
+		}
+	}
 
-function IsSigWebInstalled(){
-	var xhr = new XMLHttpRequest();
-	try{
-		xhr.onreadystatechange = function() {
-			if (xhr.readyState == 4 && xhr.status == 0) {
-				console.log("Unknown Error Occured. SigWeb Service response not received.");
-				return false;
+	function makeUri() {
+		var prot = window.location.protocol;
+                if(prot == "file:")
+                {
+                   prot = 'http:';
+                }
+
+		if (isIE()) {
+			if (prot == 'https:') {
+				return (prot + "//tablet.sigwebtablet.com:47290/SigWeb/");
 			}
-		};
-		xhr.open("GET", baseUri+"TabletState"+"?noCache="+generateUUID(), false);
-		xhr.send();
-	}catch(e){
-		console.log('catch', e);
-	}
-
-	return (xhr.status != 404 && xhr.status != 0);
-}
-
-function isIE() {
-
-	return ((navigator.appName == 'Microsoft Internet Explorer') || ((navigator.appName == 'Netscape') && (new RegExp("Trident/.*rv:([0-9]{1,}[\.0-9]{0,})").exec
-	(navigator.userAgent) != null)));
-}
-
-function isChrome() {
-	var ua = navigator.userAgent;
-	var chrome = false;
-
-	//Javascript Browser Detection - Chrome
-	if (ua.lastIndexOf('Chrome/') > 0) {
-		//var version = ua.substr(ua.lastIndexOf('Chrome/') + 7, 2);
-		return true;
-	}
-	else {
-		return false;
-	}
-}
-
-function makeUri() {
-	var prot = window.location.protocol;
-	if(prot == "file:")
-	{
-		prot = 'http:';
-	}
-
-	if (isIE()) {
-		if (prot == 'https:') {
-			return (prot + "//tablet.sigwebtablet.com:47290/SigWeb/");
+			else {
+				return (prot + "//tablet.sigwebtablet.com:47289/SigWeb/");
+			}
 		}
+
+		if (isChrome()) {
+			if (prot == 'https:') {
+				return (prot + "//tablet.sigwebtablet.com:47290/SigWeb/");
+			}
+			else {
+				return (prot + "//tablet.sigwebtablet.com:47289/SigWeb/");
+			}
+		}
+
 		else {
-			return (prot + "//tablet.sigwebtablet.com:47289/SigWeb/");
+			//FIREFOX
+			if (prot == 'https:') {
+				return (prot + "//tablet.sigwebtablet.com:47290/SigWeb/");
+			}
+			else {
+				return (prot + "//tablet.sigwebtablet.com:47289/SigWeb/");
+			}
 		}
 	}
 
-	if (isChrome()) {
-		if (prot == 'https:') {
-			return (prot + "//tablet.sigwebtablet.com:47290/SigWeb/");
-		}
-		else {
-			return (prot + "//tablet.sigwebtablet.com:47289/SigWeb/");
-		}
+	function SigWebcreateXHR() {
+		try { return new XMLHttpRequest(); } catch (e) { }
+		try { return new window.ActiveXObject("Msxml2.XMLHTTP.6.0"); } catch (e) { }
+		try { return new window.ActiveXObject("Msxml2.XMLHTTP.3.0"); } catch (e) { }
+		try { return new window.ActiveXObject("Msxml2.XMLHTTP"); } catch (e) { }
+		try { return new window.ActiveXObject("Microsoft.XMLHTTP"); } catch (e) { }
+
+		alert("XMLHttpRequest not supported");
+		return null;
 	}
 
-	else {
-		//FIREFOX
-		if (prot == 'https:') {
-			return (prot + "//tablet.sigwebtablet.com:47290/SigWeb/");
+	var Count = false;
+
+
+
+	function SigWebSetProperty(prop) {
+		var xhr = SigWebcreateXHR();
+
+		if (xhr) {
+			xhr.open("POST", baseUri + prop, true);
+			xhr.send(null);
+			if (xhr.readyState == 4 && xhr.status == 200) {
+				return xhr.responseText;
+			}
 		}
-		else {
-			return (prot + "//tablet.sigwebtablet.com:47289/SigWeb/");
+		return "";
+	}
+
+	function SigWebSetPropertySync(prop) {
+		var xhr = SigWebcreateXHR();
+
+		if (xhr) {
+			xhr.open("POST", baseUri + prop, false);
+			xhr.send();
+			if (xhr.readyState == 4 && xhr.status == 200) {
+				return xhr.responseText;
+			}
 		}
+		return "";
 	}
-}
 
-function SigWebcreateXHR() {
-	try { return new XMLHttpRequest(); } catch (e) { }
-	try { return new window.ActiveXObject("Msxml2.XMLHTTP.6.0"); } catch (e) { }
-	try { return new window.ActiveXObject("Msxml2.XMLHTTP.3.0"); } catch (e) { }
-	try { return new window.ActiveXObject("Msxml2.XMLHTTP"); } catch (e) { }
-	try { return new window.ActiveXObject("Microsoft.XMLHTTP"); } catch (e) { }
+	function SigWebSetStreamProperty(prop, strm) {
+		var xhr = SigWebcreateXHR();
 
-	alert("XMLHttpRequest not supported");
-	return null;
-}
-
-var Count = false;
-
-
-
-function SigWebSetProperty(prop) {
-	var xhr = SigWebcreateXHR();
-
-	if (xhr) {
-		xhr.open("POST", baseUri + prop, true);
-		xhr.send(null);
-		if (xhr.readyState == 4 && xhr.status == 200) {
-			return xhr.responseText;
+		if (xhr) {
+			xhr.open("POST", baseUri + prop );
+			xhr.setRequestHeader("Content-Type", "text/plain");
+			xhr.send(strm);
+//			if (xhr.readyState == 4 && xhr.status == 200) {
+//				return xhr.responseText;
+//			}
 		}
+		return "";
 	}
-	return "";
-}
 
-function SigWebSetPropertySync(prop) {
-	var xhr = SigWebcreateXHR();
+	function SigWebSetImageStreamProperty(prop, strm) {
+		var xhr = SigWebcreateXHR();
 
-	if (xhr) {
-		xhr.open("POST", baseUri + prop, false);
-		xhr.send();
-		if (xhr.readyState == 4 && xhr.status == 200) {
-			return xhr.responseText;
+		if (xhr) {
+			xhr.open("POST", baseUri + prop, false);
+			xhr.setRequestHeader("Content-Type", "image/png");
+			xhr.send(strm);
+			if (xhr.readyState == 4 && xhr.status == 200) {
+				return xhr.responseText;
+			}
 		}
+		return "";
 	}
-	return "";
-}
 
-function SigWebSetStreamProperty(prop, strm) {
-	var xhr = SigWebcreateXHR();
+	function SigWebSetImageBlobProperty(prop, strm) {
+		var xhr = SigWebcreateXHR();
 
-	if (xhr) {
-		xhr.open("POST", baseUri + prop );
-		xhr.setRequestHeader("Content-Type", "text/plain");
-		xhr.send(strm);
-		//			if (xhr.readyState == 4 && xhr.status == 200) {
-		//				return xhr.responseText;
-		//			}
-	}
-	return "";
-}
+		//			var bb = new BlobBuilder();
+		//			bb.append( strm );
+		//			bb.append( "\0" );
+		//			var blob = bb.getBlob( );
 
-function SigWebSyncSetStreamProperty(prop, strm) {
-	var xhr = SigWebcreateXHR();
-
-	if (xhr) {
-		xhr.open("POST", baseUri + prop , false);
-		xhr.setRequestHeader("Content-Type", "text/plain");
-		xhr.send(strm);
-		if (xhr.readyState == 4 && xhr.status == 200) {
-			return xhr.responseText;
+		if (xhr) {
+			xhr.open("POST", baseUri + prop, false);
+			xhr.setRequestHeader("Content-Type", "blob");
+			xhr.send(strm);
+			if (xhr.readyState == 4 && xhr.status == 200) {
+				return xhr.responseText;
+			}
 		}
+		return "";
 	}
-	return "";
-}
 
-function SigWebSetImageStreamProperty(prop, strm) {
-	var xhr = SigWebcreateXHR();
+	function SigWebGetProperty(prop) {
+		var xhr = SigWebcreateXHR();
 
-	if (xhr) {
-		xhr.open("POST", baseUri + prop, false);
-		xhr.setRequestHeader("Content-Type", "image/png");
-		xhr.send(strm);
-		if (xhr.readyState == 4 && xhr.status == 200) {
-			return xhr.responseText;
+		if (xhr) {
+			xhr.open("GET", baseUri + prop, false );
+			xhr.send(null);
+			if (xhr.readyState == 4 && xhr.status == 200) {
+				return xhr.responseText;
+			}
 		}
+		return "";
 	}
-	return "";
-}
-
-function SigWebSetImageBlobProperty(prop, strm) {
-	var xhr = SigWebcreateXHR();
-
-	//			var bb = new BlobBuilder();
-	//			bb.append( strm );
-	//			bb.append( "\0" );
-	//			var blob = bb.getBlob( );
-
-	if (xhr) {
-		xhr.open("POST", baseUri + prop, false);
-		xhr.setRequestHeader("Content-Type", "blob");
-		xhr.send(strm);
-		if (xhr.readyState == 4 && xhr.status == 200) {
-			return xhr.responseText;
-		}
-	}
-	return "";
-}
-
-function SigWebGetProperty(prop) {
-	var xhr = SigWebcreateXHR();
-
-	if (xhr) {
-		xhr.open("GET", baseUri + prop + "?noCache=" + generateUUID(), false );
-		xhr.send(null);
-		if (xhr.readyState == 4 && xhr.status == 200) {
-			return xhr.responseText;
-		}
-	}
-	return "";
-}
 
 
 
-var SigImageB64;
+	var SigImageB64;
 
 
-	// function GetSigImageB64_custom(callback)
-	// {
-	// 	var cvs = document.createElement('canvas');
-	// 	cvs.width = GetImageXSize();
-	// 	cvs.height = GetImageYSize();
+//	function GetSigImageB64(callback) 
+//		{
+//		var cvs = document.createElement('canvas');
+//		cvs.width = GetImageXSize();
+//		cvs.height = GetImageYSize();
+//
+//		var xhr2 = new XMLHttpRequest();
+//		xhr2.open("GET", baseUri + "SigImage/1", false);
+//		xhr2.responseType = "blob";
+//		xhr2.send(null);
+//		if (xhr2.readyState == 4 && xhr.status == 200) 
+//			{
+//			var cntx = cvs.getContext('2d');
+//			var img = new Image();
+//			img.src = window.URL.createObjectURL(xhr2.response);
+//			img.onload = function () 
+//				{
+//				cntx.drawImage(img, 0, 0);
+//				var b64String = cvs.toDataURL("image/png");
+//				var loc = b64String.search("base64,");
+//				var retstring = b64String.slice(loc + 7, b64String.length);
+//				if (callback) 
+//					{
+//					callback(retstring);
+//					}
+//				}
+//			}
+//		}
 
-	// 	var xhr2 = new XMLHttpRequest();
-	// 	xhr2.open("GET", baseUri + "SigImage/1", false);
-	// 	xhr2.responseType = "blob";
-	// 	xhr2.send(null);
-	// 	if (xhr2.readyState == 4 && xhr.status == 200)
-	// 		{
-	// 		var cntx = cvs.getContext('2d');
-	// 		var img = new Image();
-	// 		img.src = window.URL.createObjectURL(xhr2.response);
-	// 		img.onload = () =>	{
-	// 			cntx.drawImage(img, 0, 0);
-	// 			//var b64String = cvs.toDataURL("image/png");
-	// 			//var loc = b64String.search("base64,");
-	// 			//var retstring = b64String.slice(loc + 7, b64String.length);
-	// 			return img
-	// 		}
-	// 	}
-	// }
 
-	function GetSigImageB64_custom(callback)
-	{
+	function GetSigImageB64(callback ) 
+		{
 		var cvs = document.createElement('canvas');
 		cvs.width = GetImageXSize();
 		cvs.height = GetImageYSize();
-	
+
 		var xhr2 = new XMLHttpRequest();
-		xhr2.open("GET", baseUri + "SigImage/1"  + "?noCache=" + generateUUID(), true);
+		xhr2.open("GET", baseUri + "SigImage/1", true);
 		xhr2.responseType = "blob";
 		xhr2.send(null);
-		xhr2.onload = function ()
-		{
+		xhr2.onload = function () 
+			{
 			var cntx = cvs.getContext('2d');
 			var img = new Image();
-			//			img.src = window.URL.createObjectURL(xhr2.response);
+//			img.src = window.URL.createObjectURL(xhr2.response);
 			img.src = getBlobURL(xhr2.response);
-			img.onload = function ()
-			{
-				cntx.drawImage(img, 0, 0);
-				//var b64String = cvs.toDataURL("image/png");
-				//var loc = b64String.search("base64,");
-				//var retstring = b64String.slice(loc + 7, b64String.length);
-				if (callback)
+			img.onload = function () 
 				{
-					callback(img);
+				cntx.drawImage(img, 0, 0);
+				var b64String = cvs.toDataURL("image/png");
+				var loc = b64String.search("base64,");
+				var retstring = b64String.slice(loc + 7, b64String.length);
+				if (callback) 
+					{
+					callback(retstring);
+					}
 				}
 			}
 		}
+
+
+
+
+	function SigWebWaitForPenDown(callback) {
+		var xhr = SigWebcreateXHR();
+
+		if (xhr) {
+			xhr.open("GET", baseUri + "WaitForPenDown");
+			xhr.timeout = 10000;
+			xhr.onreadystatechange = function () {
+				if (xhr.readyState != 4)
+					return;
+				if (xhr.status == 200)
+					callback();
+			}
+			xhr.send(null);
+		}
 	}
-	
 
 
-function GetSigImageB64(callback )
-{
-	var cvs = document.createElement('canvas');
-	cvs.width = GetImageXSize();
-	cvs.height = GetImageYSize();
+	function GetSigImage(ctx) {
+		var xhr2 = new XMLHttpRequest();
+		xhr2.open("GET", baseUri + "SigImage/1", true);
+		xhr2.responseType = "blob";
+		xhr2.send(null);
+		xhr2.onload = function () {
+			var img = new Image();
+			img.src = getBlobURL(xhr2.response);
+			img.onload = function () {
+				ctx.drawImage(img, 0, 0);
+				revokeBlobURL(this.src);
+				img = null;
+			}
+		}
+	}
 
-	var xhr2 = new XMLHttpRequest();
-	xhr2.open("GET", baseUri + "SigImage/1"  + "?noCache=" + generateUUID(), true);
-	xhr2.responseType = "blob";
-	xhr2.send(null);
-	xhr2.onload = function ()
-	{
-		var cntx = cvs.getContext('2d');
-		var img = new Image();
-		//			img.src = window.URL.createObjectURL(xhr2.response);
-		img.src = getBlobURL(xhr2.response);
-		img.onload = function ()
-		{
-			cntx.drawImage(img, 0, 0);
-			var b64String = cvs.toDataURL("image/png");
-			var loc = b64String.search("base64,");
-			var retstring = b64String.slice(loc + 7, b64String.length);
-			if (callback)
+	var EvStatus;
+	var onSigPenDown;
+	var onSigPenUp;
+
+	function SigWebSetDisplayTarget(obj) {
+		ctx = obj;
+	}
+
+
+
+
+	var		NumPointsLastTime = 0;
+
+	function SigWebRefresh() {
+		var NumPoints = NumberOfTabletPoints();
+		if ( NumPoints == NumPointsLastTime )
 			{
-				callback(retstring);
-			}
-		}
-	}
-}
-
-
-
-
-function SigWebWaitForPenDown(callback) {
-	var xhr = SigWebcreateXHR();
-
-	if (xhr) {
-		xhr.open("GET", baseUri + "WaitForPenDown" + "?noCache=" + generateUUID());
-		xhr.timeout = 10000;
-		xhr.onreadystatechange = function () {
-			if (xhr.readyState != 4)
 			return;
-			if (xhr.status == 200)
-			callback();
+			}
+		NumPointsLastTime = NumPoints;
+
+		var xhr2 = new XMLHttpRequest();
+		xhr2.open("GET", baseUri + "SigImage/0", true);
+		xhr2.responseType = "blob"
+		xhr2.onload = function () {
+			var img = new Image();
+			img.src = getBlobURL(xhr2.response);
+			//				img.src = window.URL.createObjectURL(xhr2.response);
+			img.onload = function () {
+				ctx.drawImage(img, 0, 0);
+				revokeBlobURL(this.src);
+				img = null;
+			}
 		}
-		xhr.send(null);
+		xhr2.send(null);
 	}
-}
-
-
-function GetSigImage(ctx) {
-	var xhr2 = new XMLHttpRequest();
-	xhr2.open("GET", baseUri + "SigImage/1" + "?noCache=" + generateUUID(), true);
-	xhr2.responseType = "blob";
-	xhr2.send(null);
-	xhr2.onload = function () {
-		var img = new Image();
-		img.src = getBlobURL(xhr2.response);
-		img.onload = function () {
-			ctx.drawImage(img, 0, 0);
-			revokeBlobURL(this.src);
-			img = null;
-		}
-	}
-}
-
-var EvStatus;
-var onSigPenDown;
-var onSigPenUp;
-
-function SigWebSetDisplayTarget(obj) {
-	ctx = obj;
-}
 
 
 
 
-var		NumPointsLastTime = 0;
 
-function SigWebRefresh() {
-	var NumPoints = NumberOfTabletPoints();
-	if ( NumPoints == NumPointsLastTime )
-	{
-		return;
-	}
-	NumPointsLastTime = NumPoints;
+	function SigWebEvent() {
+		var OldEvStatus = EvStatus;
 
-	var xhr2 = new XMLHttpRequest();
-	xhr2.open("GET", baseUri + "SigImage/0" + "?noCache=" + generateUUID(), true);
-	xhr2.responseType = "blob"
-	xhr2.onload = function () {
-		var img = new Image();
-		img.src = getBlobURL(xhr2.response);
-		//				img.src = window.URL.createObjectURL(xhr2.response);
-		img.onload = function () {
-			ctx.drawImage(img, 0, 0);
-			revokeBlobURL(this.src);
-			img = null;
+		var xhr = SigWebcreateXHR();
+
+		if (xhr) {
+			xhr.open("GET", baseUri + "EventStatus", true);
+			xhr.onload = function () {
+				EvStatus = xhr.responseText
+				if ((OldEvStatus & 0x01) && (EvStatus & 0x02)) {
+					if (onSigPenDown) {
+						onSigPenDown();
+					}
+				}
+
+				if ((OldEvStatus & 0x02) && (EvStatus & 0x01)) {
+					if (onSigPenUp) {
+						onSigPenUp();
+					}
+				}
+			}
+			xhr.send(null);
 		}
 	}
-	xhr2.send(null);
-}
 
 
-function SigWebEvent() {
-	var OldEvStatus = EvStatus;
+	var SigWebFontThreshold = 155;
 
-	var xhr = SigWebcreateXHR();
+	function setSigWebFontThreshold(v) {
+		SigWebFontThreshold = v;
+	}
 
-	if (xhr) {
-		xhr.open("GET", baseUri + "EventStatus" + "?noCache=" + generateUUID(), true);
-		xhr.onload = function () {
-			EvStatus = xhr.responseText
-			if ((OldEvStatus & 0x01) && (EvStatus & 0x02)) {
-				if (onSigPenDown) {
-					onSigPenDown();
+
+
+	function createLcdBitmapFromCanvas(ourCanvas, xp, yp, width, height) {
+		var canvasCtx = ourCanvas.getContext('2d');
+		var imgData = canvasCtx.getImageData(0, 0, width, height);
+		var j = 0;
+		var sVal = 0;
+		var outData = "";
+		var outIdx = 0;
+		var data = imgData.data;
+
+		for (var y = 0; y < height; y++)
+			for (var x = 0; x < width; x++) {
+				var tmp1 = data[j];
+				var tmp2 = data[j + 1];
+				var tmp3 = data[j + 2];
+				var tmp4 = data[j + 3];
+
+				//					sVal = tmp1 + (tmp2 << 8 ) + ( tmp3 << 16 ) + (tmp4 << 24 );
+				j = j + 4;
+				if (tmp1 < SigWebFontThreshold) {
+					outData += "B";
+				}
+				else {
+					outData += "W";
 				}
 			}
 
-			if ((OldEvStatus & 0x02) && (EvStatus & 0x01)) {
-				if (onSigPenUp) {
-					onSigPenUp();
-				}
-			}
-		}
-		xhr.send(null);
+		return outData;
 	}
-}
-
-function generateUUID() {
-	var d = new Date().getTime();
-	if (typeof performance !== 'undefined' && typeof performance.now === 'function'){
-		d += performance.now(); //use high-precision timer if available
-	}
-	return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
-		var r = (d + Math.random() * 16) % 16 | 0;
-		d = Math.floor(d / 16);
-		return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
-	});
-}
 
 
-var SigWebFontThreshold = 155;
-
-function setSigWebFontThreshold(v) {
-	SigWebFontThreshold = v;
-}
-
-
-
-function createLcdBitmapFromCanvas(ourCanvas, xp, yp, width, height) {
-	var canvasCtx = ourCanvas.getContext('2d');
-	var imgData = canvasCtx.getImageData(0, 0, width, height);
-	var j = 0;
-	var sVal = 0;
-	var outData = "";
-	var outIdx = 0;
-	var data = imgData.data;
-
-	for (var y = 0; y < height; y++)
-	for (var x = 0; x < width; x++) {
-		var tmp1 = data[j];
-		var tmp2 = data[j + 1];
-		var tmp3 = data[j + 2];
-		var tmp4 = data[j + 3];
-
-		//					sVal = tmp1 + (tmp2 << 8 ) + ( tmp3 << 16 ) + (tmp4 << 24 );
-		j = j + 4;
-		if (tmp1 < SigWebFontThreshold) {
-			outData += "B";
-		}
-		else {
-			outData += "W";
+	function toHex(NibVal) {
+		switch (NibVal) {
+			case 0:
+				return "0";
+			case 1:
+				return "1";
+			case 2:
+				return "2";
+			case 3:
+				return "3";
+			case 4:
+				return "4";
+			case 5:
+				return "5";
+			case 6:
+				return "6";
+			case 7:
+				return "7";
+			case 8:
+				return "8";
+			case 9:
+				return "9";
+			case 10:
+				return "A";
+			case 11:
+				return "B";
+			case 12:
+				return "C";
+			case 13:
+				return "D";
+			case 14:
+				return "E";
+			case 15:
+				return "F";
 		}
 	}
 
-	return outData;
-}
-
-
-function toHex(NibVal) {
-	switch (NibVal) {
-		case 0:
-		return "0";
-		case 1:
-		return "1";
-		case 2:
-		return "2";
-		case 3:
-		return "3";
-		case 4:
-		return "4";
-		case 5:
-		return "5";
-		case 6:
-		return "6";
-		case 7:
-		return "7";
-		case 8:
-		return "8";
-		case 9:
-		return "9";
-		case 10:
-		return "A";
-		case 11:
-		return "B";
-		case 12:
-		return "C";
-		case 13:
-		return "D";
-		case 14:
-		return "E";
-		case 15:
-		return "F";
+	function ToHexString(ByteVal) {
+		var Str = "";
+		Str += toHex((ByteVal >> 4) & 0x0f);
+		Str += toHex(ByteVal & 0x0F);
+		return Str
 	}
-}
-
-function ToHexString(ByteVal) {
-	var Str = "";
-	Str += toHex((ByteVal >> 4) & 0x0f);
-	Str += toHex(ByteVal & 0x0F);
-	return Str
-}
 
 
 
 
 
-function textToTablet(x, y, height, str, fnt) {
-	var c = document.createElement('canvas');
-	var cntx = c.getContext('2d');
-	cntx.font = fnt;
-	var txt = str;
-	var xs = Math.round(cntx.measureText(txt).width);
-	var ys = height;
-	c.width = xs;
-	c.height = ys;
+	function textToTablet(x, y, height, str, fnt) {
+		var c = document.createElement('canvas');
+		var cntx = c.getContext('2d');
+		cntx.font = fnt;
+		var txt = str;
+		var xs = Math.round(cntx.measureText(txt).width);
+		var ys = height;
+		c.width = xs;
+		c.height = ys;
 
-	cntx.font = fnt;
-	cntx.fillStyle = '#FFFFFF'
-	cntx.rect(0, 0, xs, ys);
-	cntx.fill();
+		cntx.font = fnt;
+		cntx.fillStyle = '#FFFFFF'
+		cntx.rect(0, 0, xs, ys);
+		cntx.fill();
 
 
-	cntx.fillStyle = '#000000'
-	cntx.textBaseline = "top";
-	cntx.fillText(txt, 0, 0);
+		cntx.fillStyle = '#000000'
+		cntx.textBaseline = "top";
+		cntx.fillText(txt, 0, 0);
 
-	cntx.drawImage(cntx.canvas, 0, 0, xs, ys);
+		cntx.drawImage(cntx.canvas, 0, 0, xs, ys);
 
-	var Gstr = createLcdBitmapFromCanvas(c, 0, 0, xs, ys)
+		var Gstr = createLcdBitmapFromCanvas(c, 0, 0, xs, ys)
 
-	LcdWriteImageStream(0, 2, x, y, xs, ys, Gstr);
-}
+		LcdWriteImageStream(0, 2, x, y, xs, ys, Gstr);
+	}
 
-function LcdWriteImage(Dst, Mode, Xp, Yp, Url) {
-	var Prop = "LcdWriteImage/";
-	var NewUrl = Url.replace(/\//g, "_");
+	function LcdWriteImage(Dst, Mode, Xp, Yp, Url) {
+		var Prop = "LcdWriteImage/";
+		var NewUrl = Url.replace(/\//g, "_");
 
 		Prop = Prop + Dst + "," + Mode + "," + Xp + "," + Yp + "," + NewUrl;
 		SigWebSetPropertySync(Prop);
@@ -913,32 +543,15 @@ function LcdWriteImage(Dst, Mode, Xp, Yp, Url) {
 		lDiv.innerHTML = pText;
 
 		var lResult =
-		{
-			width: lDiv.clientWidth,
-			height: lDiv.clientHeight
-		};
+				{
+					width: lDiv.clientWidth,
+					height: lDiv.clientHeight
+				};
 
 		document.body.removeChild(lDiv);
 		lDiv = null;
 
 		return lResult;
-	}
-
-	function GetSigWebVersion(){
-		var prop = "SigWebVersion";
-
-		var xhr = SigWebcreateXHR();
-
-		if (xhr) {
-			xhr.open("GET", baseUri + prop + "?noCache=" + generateUUID(), false );
-			xhr.send(null);
-			if (xhr.readyState == 4 && xhr.status == 200) {
-				return xhr.responseText.slice(1, xhr.responseText.length - 1);
-			} else{
-				return "1.5"; //the currentversion of the SigWeb service is not installed
-			}
-		}
-		return "";
 	}
 
 	//
@@ -987,31 +600,31 @@ function LcdWriteImage(Dst, Mode, Xp, Yp, Url) {
 	//		function  ExportSigFile(  FileName ) {}
 	//		function  ImportSigFile(  FileName ) {}
 
-	function SetSigString(sigStr, ctx)
-	{
+	function SetSigString(sigStr, ctx) 
+		{
 		var Prop = "SigString";
 
 		Prop = Prop;
 		var xhr = SigWebcreateXHR();
 
-		if (xhr)
-		{
+		if (xhr) 
+			{
 			xhr.open("POST", baseUri + Prop );
 			xhr.setRequestHeader("Content-Type", "text/plain");
 			xhr.send(sigStr);
-			xhr.onload = function ()
-			{
-				if (ctx)
+			xhr.onload = function () 
 				{
+				if (ctx)
+					{
 					var can = ctx.canvas;
 					SetImageXSize( can.width );
 					SetImageYSize( can.height );
 					GetSigImage(ctx);
+					}
 				}
 			}
-		}
 		return "";
-	}
+		}
 
 
 
@@ -1108,15 +721,7 @@ function LcdWriteImage(Dst, Mode, Xp, Yp, Url) {
 		Prop = Prop;
 		SigWebSetStreamProperty(Prop, keyData);
 		return GetKeyString();
-	}
-
-	function AutoKeyAddANSIData(keyData) {
-		var Prop = "AutoKeyAddANSIData";
-
-		Prop = Prop;
-		var isASCII = SigWebSyncSetStreamProperty(Prop, keyData);
-		return isASCII;
-	}
+		}
 
 	//		function  GetKeyReceipt( ) {}
 
@@ -1456,7 +1061,7 @@ function LcdWriteImage(Dst, Mode, Xp, Yp, Url) {
 	//
 	//		SigPlusNETImage.cs
 	//
-	//		function  GetSigImageB64( )
+	//		function  GetSigImageB64( )  
 	//			{
 	//			var xhr2 = new XMLHttpRequest();
 	//			xhr2.open("GET", baseUri + "SigImage/1", false );
@@ -1692,9 +1297,9 @@ function LcdWriteImage(Dst, Mode, Xp, Yp, Url) {
 		SigWebSetPropertySync(Prop);
 	}
 
+
 	function SetSigWindow(coords, xp, yp, xs, ys) {
 		var Prop = "SigWindow/";
-
 		Prop = Prop + coords + "," + xp + "," + yp + "," + xs + "," + ys;
 		SigWebSetPropertySync(Prop);
 	}
@@ -1722,6 +1327,7 @@ function LcdWriteImage(Dst, Mode, Xp, Yp, Url) {
 		return SigWebGetProperty(Prop);
 	}
 
+
 	function LCDSetWindow(xP, yP, xS, yS) {
 		var Prop = "LCDSetWindow/";
 		Prop = Prop + xP + "," + yP + "," + xS + "," + yS;
@@ -1740,9 +1346,9 @@ function LcdWriteImage(Dst, Mode, Xp, Yp, Url) {
 		c.height = ys;
 
 		if ( xs == 0 )
-		{
+			{
 			return;
-		}
+			}
 
 		cntx.font = fnt;
 		cntx.fillStyle = '#FFFFFF'
@@ -1873,49 +1479,49 @@ function LcdWriteImage(Dst, Mode, Xp, Yp, Url) {
 		Result = SigWebSetStreamProperty(Prop, CmdStr);
 	}
 
-/*
-	function LCDSendGraphicCanvas(dest, mode, x, y, canvas) {
-		var Gstr = createLcdBitmapFromCanvas(canvas, 0, 0, xs, ys)
-		LcdWriteImageStream(dest, mode, x, y, canvas.width, canvas.height, Gstr);
-	}
-*/
+
+	// function LCDSendGraphicCanvas(dest, mode, x, y, canvas) {
+	// 	var Gstr = createLcdBitmapFromCanvas(canvas, 0, 0, xs, ys)
+	// 	LcdWriteImageStream(dest, mode, x, y, canvas.width, canvas.height, Gstr);
+	// }
+
 
 	//		function  LCDSendWindowedGraphicCanvas(  dest, mode,  x,  y, canvas )
 	//			 {
 	//			 }
 
 
-	//		function  LCDSendWindowedGraphicCanvas(  dest, mode,  x,  y,  xs,  ys, canvas )
+	//		function  LCDSendWindowedGraphicCanvas(  dest, mode,  x,  y,  xs,  ys, canvas ) 
 	//			{
 	//			var Gstr = createLcdBitmapFromCanvas( canvas, 0, 0, xs, ys)
 	//			LcdWriteImageStream( dest, mode, x, y, xs, ys, Gstr );
 	//			}
 
-/*
-	function LCDSendWindowedGraphicCanvas(dest, mode, x, y, xs, ys, c, xps, yps) {
-		var Gstr = createLcdBitmapFromCanvas(canvas, xps, yps, xs, ys)
-		LcdWriteImageStream(dest, mode, x, y, xs, ys, Gstr);
-	}
-*/
+
+	// function LCDSendWindowedGraphicCanvas(dest, mode, x, y, xs, ys, c, xps, yps) {
+	// 	var Gstr = createLcdBitmapFromCanvas(canvas, xps, yps, xs, ys)
+	// 	LcdWriteImageStream(dest, mode, x, y, xs, ys, Gstr);
+	// }
+
 
 
 	function LCDSendGraphicUrl(dest, mode, x, y, url) {
 		LcdWriteImage(dest, mode, x, y, url)
 	}
 
-	//		function  LCDSendWindowedGraphicUrl(  dest, mode,  X,  Y, url )
+	//		function  LCDSendWindowedGraphicUrl(  dest, mode,  X,  Y, url ) 
 	//			{
 	//			}
 
-	//		function  LCDSendWindowedGraphicUrl(  dest, mode,  x,  y,  xs,  ys, url )
+	//		function  LCDSendWindowedGraphicUrl(  dest, mode,  x,  y,  xs,  ys, url ) 
 	//			{
 	//			LcdWriteImageStream(dest, mode, x, y, xs, ys, url);
 	//			}
-/*
-	function LCDSendWindowedGraphicUrl(dest, mode, x, y, xse, yse, url, xps, yps) {
-		LcdWriteImageStream(dest, mode, x, y, xs, ys, url);
-	}
-*/
+
+	// function LCDSendWindowedGraphicUrl(dest, mode, x, y, xse, yse, url, xps, yps) {
+	// 	LcdWriteImageStream(dest, mode, x, y, xs, ys, url);
+	// }
+
 
 	//		function  LCDSendGraphic(  Dest,  Mode,  XPos,  YPos,  ImageFileName ) {}
 	//		function  LCDSendGraphicURL(  Dest,  Mode,  XPos,  YPos,  URL ) {}
@@ -1944,14 +1550,14 @@ function LcdWriteImage(Dst, Mode, Xp, Yp, Url) {
 		Prop = Prop;
 		return SigWebGetProperty(Prop);
 	}
-/*
-	function LCDSetCompressionMode(NewMode) {
-		var Prop = "LcdCompressionMode/";
 
-		Prop = Prop + v;
-		SigWebSetPropertySync(Prop);
-	}
-*/
+	// function LCDSetCompressionMode(NewMode) {
+	// 	var Prop = "LcdCompressionMode/";
+
+	// 	Prop = Prop + v;
+	// 	SigWebSetPropertySync(Prop);
+	// }
+
 
 	function LCDGetCompressionMode() {
 		var Prop = "LcdCompressionMode";
@@ -1959,14 +1565,14 @@ function LcdWriteImage(Dst, Mode, Xp, Yp, Url) {
 		Prop = Prop;
 		return SigWebGetProperty(Prop);
 	}
-/*
-	function LCDSetZCompressionMode(NewMode) {
-		var Prop = "LcdZCompressionMode/";
 
-		Prop = Prop + v;
-		SigWebSetPropertySync(Prop);
-	}
-*/
+	// function LCDSetZCompressionMode(NewMode) {
+	// 	var Prop = "LcdZCompressionMode/";
+
+	// 	Prop = Prop + v;
+	// 	SigWebSetPropertySync(Prop);
+	// }
+
 
 	function LCDGetZCompressionMode() {
 		var Prop = "LcdZCompressionMode";
@@ -2388,57 +1994,59 @@ function LcdWriteImage(Dst, Mode, Xp, Yp, Url) {
 		CloseTablet();
 	}
 
-	function Reset() {
-		var Prop = "Reset";
-		SigWebSetProperty(Prop);
-	}
 
-	function SetTabletState(v, ctx, tv)
-	{
+
+
+
+
+	function SetTabletState(v, ctx, tv) 
+		{
 		var delay;
 
-
-		if (tv)
-		{
-			delay = tv;
-		}
-		else
-		{
-			delay = 100;
-		}
-
-		if (GetTabletState() != v)
-		{
-			if (v == 1)
+	
+		if (tv) 
 			{
-				if (ctx)
+			delay = tv;
+			}
+		else 
+			{
+			delay = 100;
+			}
+		
+		if (GetTabletState() != v) 
+			{
+			if (v == 1) 
 				{
+				if (ctx)
+					{
 					var can = ctx.canvas;
 					SetDisplayXSize( can.width );
 					SetDisplayYSize( can.height );
 					SigWebSetDisplayTarget(ctx);
-				}
+					}
 				SetRealTabletState(v);
 				if ( ctx && (GetTabletState() != 0) )
-				{
+					{
 					var tmr = setInterval(SigWebRefresh, delay);
-				}
+					}
 				else
-				{
+					{
 					var tmr = null;
-				}
+					}
 
 				return tmr;
-			}
-			else
-			{
-				if (ctx)
-				{
-					clearInterval(ctx);
 				}
+			else
+				{
+				if (ctx)
+					{
+					clearInterval(ctx);
+					}
 				SigWebSetDisplayTarget(null);
 				SetRealTabletState(v);
+				}
 			}
-		}
 		return null;
-	}
+		}
+
+
