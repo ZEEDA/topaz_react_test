@@ -32,7 +32,7 @@
                 }
 
 		if (isIE()) {
-			if (prot == 'https:') {
+			if (prot == 'http:') {
 				return (prot + "//localhost:47290/SigWeb/");
 			}
 			else {
@@ -41,7 +41,7 @@
 		}
 
 		if (isChrome()) {
-			if (prot == 'https:') {
+			if (prot == 'http:') {
 				return (prot + "//localhost:47290/SigWeb/");
 			}
 			else {
@@ -51,7 +51,7 @@
 
 		else {
 			//FIREFOX
-			if (prot == 'https:') {
+			if (prot == 'http:') {
 				return (prot + "//localhost:47290/SigWeb/");
 			}
 			else {
