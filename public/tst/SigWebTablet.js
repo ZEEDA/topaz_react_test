@@ -25,7 +25,7 @@
 	}
 
 	function makeUri() {
-		var prot = location.protocol;
+		var prot = 'http:' //location.protocol;
                 if(prot == "file:")
                 {
                    prot = 'http:';
