@@ -25,37 +25,37 @@
 	}
 
 	function makeUri() {
-		var prot = 'http:' //location.protocol;
+		var prot = location.protocol;
                 if(prot == "file:")
                 {
                    prot = 'http:';
                 }
 
 		if (isIE()) {
-			if (prot == 'http:') {
-				return (prot + "//localhost:47290/SigWeb/");
+			if (prot == 'https:') {
+				return (prot + "//tablet.sigwebtablet.com:47290/SigWeb/");
 			}
 			else {
-				return (prot + "//localhost:47289/SigWeb/");
+				return (prot + "//tablet.sigwebtablet.com:47289/SigWeb/");
 			}
 		}
 
 		if (isChrome()) {
-			if (prot == 'http:') {
-				return (prot + "//localhost:47290/SigWeb/");
+			if (prot == 'https:') {
+				return (prot + "//tablet.sigwebtablet.com:47290/SigWeb/");
 			}
 			else {
-				return (prot + "//localhost:47289/SigWeb/");
+				return (prot + "//tablet.sigwebtablet.com:47289/SigWeb/");
 			}
 		}
 
 		else {
 			//FIREFOX
-			if (prot == 'http:') {
-				return (prot + "//localhost:47290/SigWeb/");
+			if (prot == 'https:') {
+				return (prot + "//tablet.sigwebtablet.com:47290/SigWeb/");
 			}
 			else {
-				return (prot + "//localhost:47289/SigWeb/");
+				return (prot + "//tablet.sigwebtablet.com:47289/SigWeb/");
 			}
 		}
 	}
