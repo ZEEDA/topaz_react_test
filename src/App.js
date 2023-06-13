@@ -52,56 +52,7 @@ function App() {
   return (
     <div className="App">
       <header className="App-header">
-        <Paper
-          style={{ width: "100%" }}
-          className={classes.card}
-          align="center"
-        >
-          <h2>Add Signature test</h2>
-          <Divider />
-          <Box p={5}>
-            <canvas id="cnv" name="cnv" width="500" height="100" />
-          </Box>
-          <form action="#" name="FORM1">
-            {!sigCaptured ? (
-              <Button
-                variant="contained"
-                onClick={() => {
-                  startTablet(handleSigCapture);
-                }}
-              >
-                Sign
-              </Button>
-            ) : (
-              <Button
-                onClick={() => {
-                  handleSig();
-                }}
-              >
-                Done
-              </Button>
-            )}
-            <Typography variant="body1" style={{margin: 16}}>
-              Please have customer sign signature pad.
-            </Typography>
-            <Box p={2}>
-              <Typography>Image:</Typography>
-              <img src={sigCaptured?.image.src} />
-            </Box>
-            <div className="results">
-              <Box p={2}>
-                <Typography>ImgData:</Typography>
-                <TextField
-                  className={classes.textField}
-                  name="imgData"
-                  rows="20"
-                  multiline
-                  value={sigCaptured?.image.src}
-                />
-              </Box>
-            </div>
-          </form>
-        </Paper>
+
       </header>
     </div>
   );
